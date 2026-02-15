@@ -369,7 +369,18 @@ err_t netif_rmii_ethernet_init(struct netif *netif, struct netif_rmii_ethernet_c
         memcpy(&rmii_eth_netif_config, config, sizeof(rmii_eth_netif_config));
     }
 
-    netif_add(netif, IP4_ADDR_ANY, IP4_ADDR_ANY, IP4_ADDR_ANY, NULL, netif_rmii_ethernet_low_init, netif_input);
+    // To set up a static IP
+    const ip_addr_t ip = IPADDR4_INIT_BYTES(192, 168, 178, 11);
+    const ip_addr_t mask = IPADDR4_INIT_BYTES(255, 255, 255, 0);
+    const ip_addr_t gw = IPADDR4_INIT_BYTES(192, 168, 178, 1);
+    netif_add(netif, &ip, &mask, &gw, NULL, netif_rmii_ethernet_low_init, netif_input);
+
+    // Set up the interface using DHCP
+    // if (netif_add(netif, IP4_ADDR_ANY, IP4_ADDR_ANY, IP4_ADDR_ANY, NULL,
+    //         netif_rmii_ethernet_low_init, netif_input) == NULL) {
+    //     return ERR_IF;
+    // }
+    // netif_add(netif, IP4_ADDR_ANY, IP4_ADDR_ANY, IP4_ADDR_ANY, NULL, netif_rmii_ethernet_low_init, netif_input);
 
     netif->name[0] = 'e';
     netif->name[1] = '0';
@@ -394,11 +405,11 @@ void netif_rmii_ethernet_poll() {
         uint rx_frame_length = ethernet_frame_length(rx_frame, sizeof(rx_frame));
 
         if (rx_frame_length) {
-            // printf("RX: ");
-            // for (int i = 0; i < rx_frame_length + 4; i++) {
-            //     printf("%02X", rx_frame[i]);
-            // }
-            // printf("\n");
+            printf("RX: ");
+            for (int i = 0; i < rx_frame_length + 4; i++) {
+                printf("%02X", rx_frame[i]);
+            }
+            printf("\n");
 
             struct pbuf* p = pbuf_alloc(PBUF_RAW, rx_frame_length, PBUF_POOL);
 
